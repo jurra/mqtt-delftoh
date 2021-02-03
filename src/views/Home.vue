@@ -149,7 +149,7 @@
       </el-col>
     </el-card>
     <div v-for="(user, idx) in users" :key="idx">
-      <h1>{{idx}}:{{user}}</h1>
+      <h1>{{idx}}:{{user}}</h1><div :style="'background-color: rgb(' + user + '); height:100px;width:100px'" ></div>
     </div>
   </div>
 </template>
@@ -193,7 +193,9 @@ export default {
         connected: false,
       },
       subscribeSuccess: false,
-      users:{},
+      users:{
+        badgejerry:[10,20,30]
+      },
       count: 0
     }
   },
