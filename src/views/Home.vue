@@ -160,19 +160,19 @@ export default {
   data() {
     return {
       connection: {
-        host: 'broker.emqx.io',
-        port: 8083,
-        endpoint: '/mqtt',
+        host: 'testbed.dcc.tudelft.nl',
+        port: 9010,
+        endpoint: '/',
         clean: true, // 保留会话
         connectTimeout: 4000, // 超时时间
         reconnectPeriod: 4000, // 重连时间间隔
         // 认证信息
         clientId: 'mqttjs_3be2c321',
-        username: 'emqx_test',
-        password: 'emqx_test',
+        username: 'maker',
+        password: 'OpenSciFest#2021',
       },
       subscription: {
-        topic: 'topic/mqttx',
+        topic: 'workshop/#',
         qos: 0,
       },
       publish: {
@@ -190,6 +190,7 @@ export default {
         connected: false,
       },
       subscribeSuccess: false,
+      users:{}
     }
   },
   methods: {
@@ -217,6 +218,7 @@ export default {
       })
       this.client.on('message', (topic, message) => {
         this.receiveNews = this.receiveNews.concat(message)
+        this.processMessage(message)
         console.log(`Received message ${message} from topic ${topic}`)
       })
     },
@@ -243,6 +245,7 @@ export default {
     },
     // 发送消息
     doPublish() {
+      console.log('publishing')
       const { topic, qos, payload } = this.publish
       this.client.publish(topic, payload, qos, error => {
         if (error) {
@@ -264,6 +267,16 @@ export default {
         }
       }
     },
+    processMessage(message){
+      // Convert json to javascript object
+      message = JSON.parse(message)
+      if(message.name in this.users){
+        console.log("User already exists")
+      }
+      else {
+        this.users[message.name] = message.color
+      }
+    }
   },
 }
 </script>
