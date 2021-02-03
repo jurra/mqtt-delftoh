@@ -148,6 +148,9 @@
         <el-input type="textarea" :rows="3" style="margin-bottom: 15px" v-model="receiveNews"></el-input>
       </el-col>
     </el-card>
+    <div v-for="(user, idx) in users" :key="idx">
+      <h1>{{idx}}:{{user}}</h1>
+    </div>
   </div>
 </template>
 
@@ -190,7 +193,8 @@ export default {
         connected: false,
       },
       subscribeSuccess: false,
-      users:{}
+      users:{},
+      count: 0
     }
   },
   methods: {
@@ -270,11 +274,16 @@ export default {
     processMessage(message){
       // Convert json to javascript object
       message = JSON.parse(message)
-      if(message.name in this.users){
+      let user = message.name
+      let color = message.color
+      if(user in this.users){
+        let currentUserColor = this.users[user]
         console.log("User already exists")
+        console.log("The current color of this user : " + currentUserColor)
+        if(currentUserColor !== color) this.users[user] = color
       }
       else {
-        this.users[message.name] = message.color
+        this.users[user] = color
       }
     }
   },
