@@ -214,7 +214,7 @@ export default {
       // wxs 微信小程序连接
       // alis 支付宝小程序连接
       const { host, port, endpoint, ...options } = this.connection
-      const connectUrl = `ws://${host}:${port}${endpoint}`
+      const connectUrl = `wss://${host}:${port}${endpoint}`
       try {
         this.client = mqtt.connect(connectUrl, options)
       } catch (error) {
