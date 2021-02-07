@@ -148,6 +148,9 @@
         <el-input type="textarea" :rows="3" style="margin-bottom: 15px" v-model="receiveNews"></el-input>
       </el-col>
     </el-card>
+    <div v-for="(user, idx) in users" :key="idx">
+      <h1>{{idx}}:{{user}}</h1>
+    </div>
   </div>
 </template>
 
@@ -160,19 +163,19 @@ export default {
   data() {
     return {
       connection: {
-        host: 'broker.emqx.io',
-        port: 8083,
-        endpoint: '/mqtt',
+        host: 'testbed.dcc.tudelft.nl',
+        port: 9010,
+        endpoint: '/',
         clean: true, // 保留会话
         connectTimeout: 4000, // 超时时间
         reconnectPeriod: 4000, // 重连时间间隔
         // 认证信息
         clientId: 'mqttjs_3be2c321',
-        username: 'emqx_test',
-        password: 'emqx_test',
+        username: 'maker',
+        password: 'OpenSciFest#2021',
       },
       subscription: {
-        topic: 'topic/mqttx',
+        topic: 'workshop/#',
         qos: 0,
       },
       publish: {
@@ -190,6 +193,8 @@ export default {
         connected: false,
       },
       subscribeSuccess: false,
+      users:{},
+      count: 0
     }
   },
   methods: {
@@ -217,6 +222,7 @@ export default {
       })
       this.client.on('message', (topic, message) => {
         this.receiveNews = this.receiveNews.concat(message)
+        this.processMessage(message)
         console.log(`Received message ${message} from topic ${topic}`)
       })
     },
@@ -243,6 +249,7 @@ export default {
     },
     // 发送消息
     doPublish() {
+      console.log('publishing')
       const { topic, qos, payload } = this.publish
       this.client.publish(topic, payload, qos, error => {
         if (error) {
@@ -264,6 +271,21 @@ export default {
         }
       }
     },
+    processMessage(message){
+      // Convert json to javascript object
+      message = JSON.parse(message)
+      let user = message.name
+      let color = message.color
+      if(user in this.users){
+        let currentUserColor = this.users[user]
+        console.log("User already exists")
+        console.log("The current color of this user : " + currentUserColor)
+        if(currentUserColor !== color) this.users[user] = color
+      }
+      else {
+        this.users[user] = color
+      }
+    }
   },
 }
 </script>
