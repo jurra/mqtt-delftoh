@@ -1,160 +1,167 @@
 <template>
   <div class="home-container">
-    <el-card shadow="always" style="margin-bottom:30px;">
-      <div class="emq-title">
-        Configuration
-      </div>
-      <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item prop="host" label="Host">
-              <el-input v-model="connection.host"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="port" label="Port">
-              <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="endpoint" label="Mountpoint">
-              <el-input v-model="connection.endpoint" placeholder="/mqtt"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="clientId" label="Client ID">
-              <el-input v-model="connection.clientId"> </el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="username" label="Username">
-              <el-input v-model="connection.username"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="password" label="Password">
-              <el-input v-model="connection.password"></el-input>
-            </el-form-item>
-          </el-col>
+    <h1 style="text-align:center">Welcome! I am a MQTT client webapp 🤖! </h1>
+    <el-row :gutter="10">
+      <el-col :span="12">
+        <el-card shadow="always" style="margin-bottom: 30px">
+          <div class="emq-title">Configuration</div>
+          <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item prop="host" label="Host">
+                  <el-input v-model="connection.host"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="port" label="Port">
+                  <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="endpoint" label="Mountpoint">
+                  <el-input v-model="connection.endpoint" placeholder="/mqtt"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="clientId" label="Client ID">
+                  <el-input v-model="connection.clientId"> </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="username" label="Username">
+                  <el-input v-model="connection.username"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="password" label="Password">
+                  <el-input v-model="connection.password"></el-input>
+                </el-form-item>
+              </el-col>
 
+              <el-col :span="24">
+                <el-button
+                  type="success"
+                  size="small"
+                  class="conn-btn"
+                  style="margin-right: 20px"
+                  :disabled="client.connected"
+                  @click="createConnection"
+                >
+                  {{ client.connected ? 'Connected' : 'Connect' }}
+                </el-button>
+
+                <el-button
+                  v-if="client.connected"
+                  type="danger"
+                  size="small"
+                  class="conn-btn"
+                  @click="destroyConnection"
+                >
+                  Disconnect
+                </el-button>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-card>
+        <el-card shadow="always" style="margin-bottom: 30px">
+          <div class="emq-title">Subscribe</div>
+          <el-form ref="subscription" hide-required-asterisk size="small" label-position="top" :model="subscription">
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item prop="topic" label="Topic">
+                  <el-input v-model="subscription.topic"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="qos" label="QoS">
+                  <el-select v-model="subscription.qos">
+                    <el-option
+                      v-for="(item, index) in qosList"
+                      :key="index"
+                      :label="item.label"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-button
+                  :disabled="!client.connected"
+                  type="success"
+                  size="small"
+                  class="subscribe-btn"
+                  @click="doSubscribe"
+                >
+                  {{ subscribeSuccess ? 'Subscribed' : 'Subscribe' }}
+                </el-button>
+                <el-button
+                  :disabled="!client.connected"
+                  type="success"
+                  size="small"
+                  class="subscribe-btn"
+                  style="margin-left: 20px"
+                  @click="doUnSubscribe"
+                  v-if="subscribeSuccess"
+                >
+                  Unsubscribe
+                </el-button>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-card>
+        <el-card shadow="always" style="margin-bottom: 30px">
+          <div class="emq-title">Publish</div>
+          <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item prop="topic" label="Topic">
+                  <el-input v-model="publish.topic"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="payload" label="Payload">
+                  <el-input v-model="publish.payload" size="small"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item prop="qos" label="QoS">
+                  <el-select v-model="publish.qos">
+                    <el-option
+                      v-for="(item, index) in qosList"
+                      :key="index"
+                      :label="item.label"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
           <el-col :span="24">
-            <el-button
-              type="success"
-              size="small"
-              class="conn-btn"
-              style="margin-right: 20px;"
-              :disabled="client.connected"
-              @click="createConnection"
-            >
-              {{ client.connected ? 'Connected' : 'Connect' }}
-            </el-button>
-
-            <el-button v-if="client.connected" type="danger" size="small" class="conn-btn" @click="destroyConnection">
-              Disconnect
+            <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">
+              Publish
             </el-button>
           </el-col>
-        </el-row>
-      </el-form>
-    </el-card>
-    <el-card shadow="always" style="margin-bottom:30px;">
-      <div class="emq-title">
-        Subscribe
-      </div>
-      <el-form ref="subscription" hide-required-asterisk size="small" label-position="top" :model="subscription">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item prop="topic" label="Topic">
-              <el-input v-model="subscription.topic"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="qos" label="QoS">
-              <el-select v-model="subscription.qos">
-                <el-option
-                  v-for="(item, index) in qosList"
-                  :key="index"
-                  :label="item.label"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-button
-              :disabled="!client.connected"
-              type="success"
-              size="small"
-              class="subscribe-btn"
-              @click="doSubscribe"
-            >
-              {{ subscribeSuccess ? 'Subscribed' : 'Subscribe' }}
-            </el-button>
-            <el-button
-              :disabled="!client.connected"
-              type="success"
-              size="small"
-              class="subscribe-btn"
-              style="margin-left:20px"
-              @click="doUnSubscribe"
-              v-if="subscribeSuccess"
-            >
-              Unsubscribe
-            </el-button>
-          </el-col>
-        </el-row>
-      </el-form>
-    </el-card>
-    <el-card shadow="always" style="margin-bottom:30px;">
-      <div class="emq-title">
-        Publish
-      </div>
-      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item prop="topic" label="Topic">
-              <el-input v-model="publish.topic"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="payload" label="Payload">
-              <el-input v-model="publish.payload" size="small"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="qos" label="QoS">
-              <el-select v-model="publish.qos">
-                <el-option
-                  v-for="(item, index) in qosList"
-                  :key="index"
-                  :label="item.label"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <el-col :span="24">
-        <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">
-          Publish
-        </el-button>
+        </el-card>
+        
       </el-col>
-    </el-card>
-    <el-card shadow="always" style="margin-bottom:30px;">
-      <div class="emq-title">
-        Receive
-      </div>
-      <el-col :span="24">
-        <el-input type="textarea" :rows="3" style="margin-bottom: 15px" v-model="receiveNews"></el-input>
+      <el-col :span="12">
+        <el-card shadow="always" style="margin-bottom: 30px">
+          <div class="emq-title">Receive</div>
+          <el-col :span="24">
+            <el-input type="textarea" :rows="3" style="margin-bottom: 15px" v-model="receiveNews"></el-input>
+          </el-col>
+        </el-card>
+        <h1 style="text-align:center"> 👇 Our list of badge clients 🚀</h1>
+        <div v-for="(user, idx) in users" :key="idx">
+          <!-- <h1 :style="'padding:2px 8px 2px 10px;color:white;background-color: rgb(' + user + ');'">{{idx}}:{{user}}</h1> -->
+          <h2 :style="'font-weight:400;padding:2px 8px 6px 10px;color:white;background-color: rgb(' + user + ');'">
+            {{ idx }}
+          </h2>
+          <!-- <div :style="'background-color: rgb(' + user + '); height:100px;width:100px'" ></div> -->
+        </div>
       </el-col>
-    </el-card>
-    <div v-for="(user, idx) in users" :key="idx">
-      <!-- <h1 :style="'padding:2px 8px 2px 10px;color:white;background-color: rgb(' + user + ');'">{{idx}}:{{user}}</h1> -->
-      <h2 :style="'font-weight:400;padding:2px 8px 6px 10px;color:white;background-color: rgb(' + user + ');'">{{idx}}</h2>
-      <!-- <div :style="'background-color: rgb(' + user + '); height:100px;width:100px'" ></div> -->
-    </div>
-
-
+    </el-row>
   </div>
 </template>
 
@@ -197,10 +204,10 @@ export default {
         connected: false,
       },
       subscribeSuccess: false,
-      users:{
-        // badgejerry:[10,20,30]
+      users: {
+        badgejerry: [10, 20, 30],
       },
-      count: 0
+      count: 0,
     }
   },
   methods: {
@@ -223,7 +230,7 @@ export default {
       this.client.on('connect', () => {
         console.log('Connection succeeded!')
       })
-      this.client.on('error', error => {
+      this.client.on('error', (error) => {
         console.log('Connection failed', error)
       })
       this.client.on('message', (topic, message) => {
@@ -247,7 +254,7 @@ export default {
     // 取消订阅
     doUnSubscribe() {
       const { topic } = this.subscription
-      this.client.unsubscribe(topic, error => {
+      this.client.unsubscribe(topic, (error) => {
         if (error) {
           console.log('Unsubscribe error', error)
         }
@@ -257,7 +264,7 @@ export default {
     doPublish() {
       console.log('publishing')
       const { topic, qos, payload } = this.publish
-      this.client.publish(topic, payload, qos, error => {
+      this.client.publish(topic, payload, qos, (error) => {
         if (error) {
           console.log('Publish error', error)
         }
@@ -277,21 +284,20 @@ export default {
         }
       }
     },
-    processMessage(message){
+    processMessage(message) {
       // Convert json to javascript object
       message = JSON.parse(message)
       let user = message.name
       let color = message.color
-      if(user in this.users){
+      if (user in this.users) {
         let currentUserColor = this.users[user]
-        console.log("User already exists")
-        console.log("The current color of this user : " + currentUserColor)
-        if(currentUserColor !== color) this.users[user] = color
-      }
-      else {
+        console.log('User already exists')
+        console.log('The current color of this user : ' + currentUserColor)
+        if (currentUserColor !== color) this.users[user] = color
+      } else {
         this.users[user] = color
       }
-    }
+    },
   },
 }
 </script>
